@@ -1,0 +1,31 @@
+{
+  "name": "resolve-dat-path",
+  "version": "1.0.0",
+  "description": "Resolves a file within a dat archive based on how web browsers would load it",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RangerMauve/resolve-dat-path.git"
+  },
+  "keywords": [
+    "hyperdrive",
+    "dat",
+    "resolve",
+    "file",
+    "browser",
+    "beaker"
+  ],
+  "author": "rangermauve",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/RangerMauve/resolve-dat-path/issues"
+  },
+  "homepage": "https://github.com/RangerMauve/resolve-dat-path#readme",
+  "devDependencies": {
+    "scoped-fs": "^1.3.0",
+    "tape": "^4.10.1"
+  }
+}
