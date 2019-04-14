@@ -1,6 +1,6 @@
 {
   "name": "resolve-dat-path",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Resolves a file within a dat archive based on how web browsers would load it",
   "main": "index.js",
   "scripts": {
