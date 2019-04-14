@@ -52,9 +52,9 @@ module.exports = function resolveFileInArchive (archive, path, cb) {
 
     function try404 () {
       let fallback = manifest.fallback_page
-      if (!fallback.startsWith('/')) fallback = `/${fallback}`
 
       if (fallback) {
+        if (!fallback.startsWith('/')) fallback = `/${fallback}`
         checkExistsFile(archive, fallback, cb, () => {
           checkExistsFile(archive, prefix + fallback, cb, notFound)
         })
@@ -93,8 +93,8 @@ function checkExistsFile (archive, path, onYes, onNo) {
 
 function getManifest (archive, cb) {
   archive.readFile(MANIFEST_LOCATION, 'utf-8', (err, rawManifest) => {
-    if (err) return cb({})
     let manifest = {}
+    if (err) return cb(manifest)
     try {
       manifest = JSON.parse(rawManifest)
     } catch (e) {

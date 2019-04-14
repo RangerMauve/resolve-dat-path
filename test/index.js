@@ -10,9 +10,9 @@ test('Test resolving index.html', (t) => {
   const toResolve = '/'
 
   resolveDatPath(fs, toResolve, (err, resolution) => {
-    if(err) t.fail()
+    if (err) t.fail()
     else {
-      const {type, path} = resolution
+      const { type, path } = resolution
       t.equals(type, 'file', 'Resolved to a file')
       t.equals(path, '/index.html', 'Resolved to the index.html')
     }
