@@ -22,4 +22,24 @@ resolveDatPath(archive, rawPath, (err, resolution) => {
     }
   }
 })
+
+// Or if you're using promises and Beaker's DatArchive API
+const resolveDatPath = require('resolve-dat-path/promise')
+
+const archive = new DatArchive('dat://somethingorother')
+const rawPath = '/blog/about'
+
+try {
+  const {type, path} = await resolveDatPath(archive, rawPath)
+
+  if(type === 'directory') {
+    console.log('Render the file list from the folder signified by `path`')
+  } else if(type === 'file') {
+    console.log('Render the file at `path`')
+  } else {
+    console.error('Something went horribly wrong')
+  }
+} catch(e) {
+  console.log('Show your application 404 page', e)
+}
 ```
