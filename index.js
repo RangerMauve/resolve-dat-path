@@ -73,7 +73,8 @@ function checkExistsDirectory (archive, path, onYes, onNo) {
     else if (stat.isDirectory()) {
       onYes(null, {
         type: 'directory',
-        path: path
+        path: path,
+        stat
       })
     } else onNo()
   })
@@ -85,7 +86,8 @@ function checkExistsFile (archive, path, onYes, onNo) {
     else if (stat.isFile()) {
       onYes(null, {
         type: 'file',
-        path: path
+        path: path,
+        stat
       })
     } else onNo()
   })

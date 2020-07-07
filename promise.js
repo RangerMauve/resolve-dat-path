@@ -1,3 +1,5 @@
+const hyperdrivePromise = require('@geut/hyperdrive-promise')
+
 const MANIFEST_LOCATION = '/dat.json'
 
 const CHECK_PATHS = [
@@ -33,14 +35,15 @@ const CHECK_PATHS = [
   If nothing was able to load, show a 404 page
 */
 
-module.exports = async function resolveFileInArchive (archive, path, cb) {
+module.exports = async function resolveFileInArchive (rawArchive, path, cb) {
+	const archive = hyperdrivePromise(rawArchive)
+
   const manifest = await getManifest(archive)
-  const prefix = manifest.web_root || ''
   if (!path.startsWith('/')) path = `/${path}`
 
   for (let index = 0; index < CHECK_PATHS.length; index++) {
     const makePath = CHECK_PATHS[index]
-    const checkPath = makePath(prefix + path)
+    const checkPath = makePath(path)
     const existsFile = await checkExistsFile(archive, checkPath)
     if (existsFile) return existsFile
   }
@@ -75,7 +78,8 @@ async function checkExistsDirectory (archive, path) {
   if (stat.isDirectory()) {
     return {
       type: 'directory',
-      path: path
+      path: path,
+      stat
     }
   }
 
@@ -93,7 +97,8 @@ async function checkExistsFile (archive, path) {
   if (stat.isFile()) {
     return {
       type: 'file',
-      path: path
+      path: path,
+      stat
     }
   }
 
