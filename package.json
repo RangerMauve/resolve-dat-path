@@ -4,7 +4,8 @@
   "description": "Resolves a file within a dat archive based on how web browsers would load it",
   "main": "index.js",
   "scripts": {
-    "test": "node test"
+    "lint": "standard",
+    "test": "tape test.js"
   },
   "repository": {
     "type": "git",
@@ -26,9 +27,8 @@
   "homepage": "https://github.com/RangerMauve/resolve-dat-path#readme",
   "devDependencies": {
     "scoped-fs": "^1.3.0",
-    "tape": "^4.10.1"
-  },
-  "dependencies": {
-    "@geut/hyperdrive-promise": "^3.0.1"
+    "standard": "^16.0.3",
+    "tape": "^5.2.2",
+    "tmp": "^0.2.1"
   }
 }

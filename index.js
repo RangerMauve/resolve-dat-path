@@ -1,107 +1,90 @@
 const MANIFEST_LOCATION = '/dat.json'
-
 const CHECK_PATHS = [
-  (path) => path,
-  (path) => path + `index.html`,
-  (path) => path + `index.md`,
-  (path) => path + `/index.html`,
-  (path) => path + `/index.md`,
-  (path) => path + `.html`,
-  (path) => path + `.md`
+  path => path,
+  path => `${path}index.html`,
+  path => `${path}index.md`,
+  path => `${path}/index.html`,
+  path => `${path}/index.md`,
+  path => `${path}.html`,
+  path => `${path}.md`
 ]
 
-// Based on algorithm used by hashbase and beaker
-// https://github.com/beakerbrowser/hashbase/blob/master/lib/apis/archive-files.js#L80
+module.exports = async function resolveFileInArchive (archive, path) {
+  let {
+    web_root: webRoot = '',
+    fallback_page: fallbackPage
+  } = await getManifest(archive)
 
-/*
-  Get the manifest
-  Try to redirect to public dir
-  Detect if it's a folder based on whether there is a trailing slash
-  If there's no trailing slash, see if adding a trailing slash resolves to a folder
-  If it's a folder
-    Try loading the folder + `index.html`
-  Else
-    Try loading the file
-    Try loading the file + html
-    Try loading the file + md
-  If it was a folder and no file was found
-    Render out the directory
-  If a file was found
-    Render out the file
-  If there is a fallback_page in the manifest
-    Try to load it
-  If nothing was able to load, show a 404 page
-*/
+  if (!path.startsWith('/')) {
+    path = `/${path}`
+  }
+  path = `${webRoot}${path}`
+  for (const makePath of CHECK_PATHS) {
+    const file = await getEntry(archive, makePath(path), 'file')
+    if (file) {
+      return file
+    }
+  }
+  const dir = await getEntry(archive, path, 'directory')
+  if (dir) {
+    return dir
+  }
+  if (fallbackPage) {
+    if (!fallbackPage.startsWith('/')) {
+      fallbackPage = `/${fallbackPage}`
+    }
+    let file
+    file = await getEntry(archive, fallbackPage, 'file')
+    if (file) {
+      return file
+    }
+    file = await getEntry(archive, `${webRoot}${fallbackPage}`, 'file')
+    if (file) {
+      return file
+    }
+  }
+  throw new Error('Not Found')
+}
 
-module.exports = function resolveFileInArchive (archive, path, cb) {
-  getManifest(archive, (manifest) => {
-    const prefix = manifest.web_root || ''
-    if (!path.startsWith('/')) path = `/${path}`
-    let index = 0
-    next()
+async function getManifest (archive) {
+  try {
+    const rawManifest = await readFile(archive, MANIFEST_LOCATION, 'utf-8')
+    return JSON.parse(rawManifest) || {}
+  } catch (error) {
+    // Oh well
+    return {}
+  }
+}
 
-    function next () {
-      const makePath = CHECK_PATHS[index++]
-      if (makePath) {
-        const checkPath = makePath(prefix + path)
-        checkExistsFile(archive, checkPath, cb, next)
-      } else {
-        checkExistsDirectory(archive, prefix + path, cb, try404)
+async function getEntry (archive, path, type) {
+  try {
+    const stat = await asyncStat(archive, path)
+    if (
+      (type === 'directory' && stat.isDirectory()) ||
+      (type === 'file' && stat.isFile())
+    ) {
+      return {
+        type,
+        path,
+        stat
       }
     }
-
-    function try404 () {
-      let fallback = manifest.fallback_page
-
-      if (fallback) {
-        if (!fallback.startsWith('/')) fallback = `/${fallback}`
-        checkExistsFile(archive, fallback, cb, () => {
-          checkExistsFile(archive, prefix + fallback, cb, notFound)
-        })
-      } else notFound()
-    }
-
-    function notFound () {
-      cb(new Error('Not Found'))
-    }
-  })
+  } catch (error) {
+    // Oh well
+  }
+  return null
 }
 
-function checkExistsDirectory (archive, path, onYes, onNo) {
+const asyncStat = (archive, path) => new Promise((resolve, reject) =>
   archive.stat(path, (err, stat) => {
-    if (err) onNo()
-    else if (stat.isDirectory()) {
-      onYes(null, {
-        type: 'directory',
-        path: path,
-        stat
-      })
-    } else onNo()
+    if (err) reject(err)
+    else resolve(stat)
   })
-}
+)
 
-function checkExistsFile (archive, path, onYes, onNo) {
-  archive.stat(path, (err, stat) => {
-    if (err) onNo()
-    else if (stat.isFile()) {
-      onYes(null, {
-        type: 'file',
-        path: path,
-        stat
-      })
-    } else onNo()
+const readFile = (archive, file, encoding) => new Promise((resolve, reject) =>
+  archive.readFile(file, encoding, (err, data) => {
+    if (err) reject(err)
+    else resolve(data)
   })
-}
-
-function getManifest (archive, cb) {
-  archive.readFile(MANIFEST_LOCATION, 'utf-8', (err, rawManifest) => {
-    let manifest = {}
-    if (err) return cb(manifest)
-    try {
-      manifest = JSON.parse(rawManifest)
-    } catch (e) {
-      // Oh well
-    }
-    cb(manifest || {})
-  })
-}
+)
